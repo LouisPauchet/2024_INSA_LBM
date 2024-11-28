@@ -1,6 +1,6 @@
 import numpy as np
 
-class Lattice_1D:
+class LatticeBoltzmann_1D:
     def __init__(self, N, U=0.1, Tau=2.0, nt=100):
         self.N = N
         self.U = U
