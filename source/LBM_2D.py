@@ -41,6 +41,23 @@ class LatticeBoltzmann2D:
             "Q": None
         }
 
+        # User-defined boundary conditions
+        self.boundary_conditions = []
+
+    def add_boundary_condition(self, condition_func):
+        """
+        Add a user-defined boundary condition function.
+        :param condition_func: A function that modifies the fields or XF arrays directly.
+        """
+        self.boundary_conditions.append(condition_func)
+
+    def apply_boundary_conditions(self):
+        """
+        Apply all user-defined boundary conditions.
+        """
+        for condition_func in self.boundary_conditions:
+            condition_func(self)
+
     def add_obstacle(self, mask, U=0, V=0, Q=None):
         """
         Apply an obstacle mask to the simulation.
@@ -48,11 +65,10 @@ class LatticeBoltzmann2D:
         """
         self.obstacle_mask = mask
         self.obstacle_boundary = {
-            "U" : U,
-            "V" : V,
-            "Q" : Q
+            "U": U,
+            "V": V,
+            "Q": Q
         }
-
 
     def equilibrium(self):
         """
@@ -106,6 +122,26 @@ class LatticeBoltzmann2D:
         if not self.obstacle_boundary["Q"] is None:
             self.Q[self.obstacle_mask] = self.obstacle_boundary["Q"]
 
+    def initialize(self):
+        """
+        Initialize the system.
+        """
+        # Initialize equilibrium
+        self.equilibrium()
+        self.XF[:, :, :, :] = self.XFEQ[:, :, :, :]
+        self.scalar_moments()
+        self.apply_boundary_conditions()
+
+    def simulate(self):
+        """
+        Main simulation loop.
+        """
+        for _ in range(self.nt):
+            self.equilibrium()
+            self.relaxation()
+            self.stream()
+            self.apply_boundary_conditions()
+            self.scalar_moments()
 
     def boundaries(self):
         """
@@ -158,16 +194,6 @@ class LatticeBoltzmann2D:
         plt.tight_layout()
         plt.show()
 
-    def initialize(self):
-        """
-        Initialize the system.
-        """
-        # Initialize equilibrium
-        self.equilibrium()
-        self.XF[:, :, :, :] = self.XFEQ[:, :, :, :]
-        self.boundaries()
-        self.scalar_moments()
-
     def plot_profile(self, x_list, variables=["U"]):
         """
         Plot the profiles of given variables at specified X locations.
@@ -185,7 +211,7 @@ class LatticeBoltzmann2D:
 
         # Create subplots for each variable
         num_vars = len(variables)
-        fig, axes = plt.subplots(num_vars, 1, figsize=(8, 5 * num_vars), sharex=True)
+        fig, axes = plt.subplots(num_vars, 1, figsize=(8, 3 * num_vars), sharex=True)
 
         if num_vars == 1:
             axes = [axes]  # Ensure axes is a list if there's only one subplot
@@ -199,19 +225,8 @@ class LatticeBoltzmann2D:
             ax.set_ylabel(variable)
             ax.legend()
             ax.grid(True)
+            ax.set_xlim(0, self.Ny)
 
         plt.tight_layout()
         plt.show()
-
-    def simulate(self):
-        """
-        Main simulation loop.
-        """
-        # Main time-stepping loop
-        for _ in range(self.nt):
-            self.equilibrium()
-            self.relaxation()
-            self.stream()
-            self.boundaries()
-            self.scalar_moments()
 
