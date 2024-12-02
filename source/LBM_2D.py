@@ -165,7 +165,7 @@ class LatticeBoltzmann2D:
         self.XF[:, 0, :, 1] = self.XFEQ[:, 0, :, 1]
         self.XF[:, self.Ny - 1, :, 1] = self.XFEQ[:, self.Ny - 1, :, 1]
 
-    def plot_moments(self):
+    def plot_moments(self, save=None):
         """
         Visualize macroscopic moments: U, V, Rho, and Q.
         """
@@ -192,9 +192,13 @@ class LatticeBoltzmann2D:
         plt.title("Q")
 
         plt.tight_layout()
+
+        if save is not None:
+            plt.savefig(save, dpi=300)
+
         plt.show()
 
-    def plot_profile(self, x_list, variables=["U"]):
+    def plot_profile(self, x_list, variables=["U"], save=None):
         """
         Plot the profiles of given variables at specified X locations.
         :param x_list: List of X indices where the profiles are extracted.
@@ -228,5 +232,9 @@ class LatticeBoltzmann2D:
             ax.set_xlim(0, self.Ny)
 
         plt.tight_layout()
+
+        if save is not None:
+            plt.savefig(save, dpi=300)
+
         plt.show()
 
